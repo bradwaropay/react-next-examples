@@ -1,0 +1,39 @@
+.container {
+  margin-top: 25vh;
+  position: relative;
+  width: 40rem;
+}
+
+.input {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.results {
+  background-color: white;
+  box-shadow: 0  0 0.25rem rgba(0,0,0, 0.5);
+  box-sizing: border-box;
+  list-style: none;
+  margin-top: 0;
+  max-height: 25vh;
+  overflow-y: scroll;
+  padding: 0.25rem 0;     
+  position: absolute;
+  top: 100%;
+  width: 100%;
+}
+
+.result {
+  padding: 0.25rem 0.5rem;
+
+  &:active,
+  &:hover,
+  &:focus {
+    background-color: blue;
+    color: white;
+    cursor: pointer;
+  }
+}
