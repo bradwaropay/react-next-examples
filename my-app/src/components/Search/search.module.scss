@@ -36,4 +36,8 @@
     color: white;
     cursor: pointer;
   }
+
+  &:focus {
+    background-color: lightgray;
+  }
 }

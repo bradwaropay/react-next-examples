@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import useDebounce from '../../hooks/debounce'
 import { Brewery } from './types';
-
 import styles from './search.module.scss';
 
 interface Test {
@@ -8,34 +8,15 @@ interface Test {
 }
 
 const Search: React.FC<Test> = ({ label = "Search" }) => {
-  // const fruits = ["Apple", "Apricot", "Orange", "Mango", "Banana", "Guava"]
-
   // Set initial states
   const [searchInput, setSearchInput] = useState("");
+  const debouncedSearchInput = useDebounce(searchInput, 500);
   const [searchResults, setSearchResults] = useState([] as Brewery[]);
 
   // Set refs
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResultsRef = useRef<HTMLUListElement>(null);
   const searchResultRef = useRef<HTMLLIElement[]>([]);
-
-  // Clear results on outside click
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        (searchInputRef.current && !searchInputRef.current.contains(event.target as HTMLElement)) &&
-        (searchResultsRef.current && !searchResultsRef.current.contains(event.target as HTMLElement))
-      ) {
-        clearSearchResults();
-      }
-    };
-
-    window.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      window.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   // Brewery fetch
   const searchBreweries = async (query: string) => {
@@ -48,11 +29,13 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
 
   // Handle input and results
   const handleSearchQuery = (query: string) => {
-    // const results = fruits.filter((result) => result.toLowerCase().includes(query.toLowerCase()));
-    // setSearchResults(results);
     setSearchInput(query);
-    searchBreweries(query);
   };
+
+  // Debounced search
+  useEffect(() => {
+    searchBreweries(debouncedSearchInput);
+  }, [debouncedSearchInput])
 
   const handleSearchResult = (result: string) => {
     setSearchInput(result);
@@ -66,11 +49,14 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
 
   // Handle search key inputs
   const handleInputKeyDown = (e: React.KeyboardEvent,) => {
+
+
     switch (e.key) {
       case "Enter":
         alert('Execute search action…')
         break;
       case "ArrowDown":
+        e.preventDefault();
         if (searchResultRef.current[0]) searchResultRef.current[0].focus();
         break;
     }
@@ -92,11 +78,13 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
         break;
       case "ArrowDown":
         if (next) {
+          e.preventDefault();
           next.focus();
         }
         break;
       case "ArrowUp":
         if (prev) {
+          e.preventDefault();
           prev.focus();
         } else {
           setInputFocus();
@@ -104,6 +92,24 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
         break;
     }
   };
+
+  // Clear results on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        (searchInputRef.current && !searchInputRef.current.contains(event.target as HTMLElement)) &&
+        (searchResultsRef.current && !searchResultsRef.current.contains(event.target as HTMLElement))
+      ) {
+        clearSearchResults();
+      }
+    };
+
+    window.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className={styles["container"]}>
@@ -113,6 +119,7 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
         ref={searchInputRef}
         type="search" value={searchInput}
         onChange={(e) => handleSearchQuery(e.target.value)}
+        onFocus={(e) => handleSearchQuery(e.target.value)}
         onKeyDown={(e) => handleInputKeyDown(e)}
       />
       {!!searchResults.length &&
