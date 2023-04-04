@@ -10,7 +10,7 @@ interface Test {
 const Search: React.FC<Test> = ({ label = "Search" }) => {
   // Set initial states
   const [searchInput, setSearchInput] = useState("");
-  const debouncedSearchInput = useDebounce(searchInput, 500);
+  const debouncedSearchInput = useDebounce(searchInput, 250);
   const [searchResults, setSearchResults] = useState([] as Brewery[]);
 
   // Set refs
@@ -24,7 +24,7 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
       return res.json();
     })
 
-    setSearchResults(breweries);
+    setSearchResults(breweries.slice(0, 14));
   };
 
   // Handle input and results
@@ -49,8 +49,6 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
 
   // Handle search key inputs
   const handleInputKeyDown = (e: React.KeyboardEvent,) => {
-
-
     switch (e.key) {
       case "Enter":
         alert('Execute search action…')
