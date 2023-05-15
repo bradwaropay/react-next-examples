@@ -1,30 +1,40 @@
-import React, { useState } from 'react';
+import React, { useReducer } from 'react';
+import { Brewery } from '../types';
 
-export interface StoreContextType {
-  count: number,
-  addCount?: () => void,
-  subtractCount?: () => void
+export interface State {
+  breweries: Pick<Brewery, 'id' | 'name'>[],
+  dispatch?: any
 }
 
-const defaultState = {
-  count: 1
+export interface Action {
+  type: string,
+  id: string,
+  name: string
 }
 
-export const StoreContext = React.createContext<Partial<StoreContextType>>(defaultState);
+const reducer = (prevState: State, action: Action): State => {
+  switch (action.type) {
+    case "ADD":
+      const state = {
+        breweries: [...prevState.breweries, { id: action.id, name: action.name }]
+      }
+      return state;
+    default:
+      throw new Error();
+  }
+};
+
+const initialState: State = {
+  breweries: []
+};
+
+export const StoreContext = React.createContext<State>(initialState);
 
 export const StoreProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [count, setCount] = useState(defaultState.count);
-
-  const addCount = () => {
-    setCount(count + 1);
-  };
-
-  const subtractCount = () => {
-    setCount(count - 1);
-  };
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   return (
-    <StoreContext.Provider value={{ count, addCount, subtractCount }}>
+    <StoreContext.Provider value={{ ...state, dispatch }}>
       {children}
     </StoreContext.Provider>
   );

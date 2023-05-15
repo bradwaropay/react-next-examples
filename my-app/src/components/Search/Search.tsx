@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import StoreContext from '../../context/StoreContext';
 import useDebounce from '../../hooks/debounce'
-import { Brewery } from './types';
+import { Brewery } from '../../types';
 import styles from './search.module.scss';
 
-interface Test {
+interface SearchProps {
   label?: string;
 }
 
-const Search: React.FC<Test> = ({ label = "Search" }) => {
+const Search: React.FC<SearchProps> = ({ label = "Search Breweries" }) => {
+  const { dispatch } = useContext(StoreContext);
   // Set initial states
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearchInput = useDebounce(searchInput, 250);
@@ -20,11 +22,12 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
 
   // Brewery fetch
   const searchBreweries = async (query: string) => {
-    const breweries = await fetch(`https://api.openbrewerydb.org/v1/breweries/search?query={${query}}`).then((res) => {
+    const breweries = await fetch(`https://api.openbrewerydb.org/v1/breweries/autocomplete?query={${query}}`).then((res) => {
       return res.json();
     })
 
-    setSearchResults(breweries.slice(0, 14));
+    // Manually limit to 15 results, API should be doing this automatically
+    setSearchResults(breweries.slice(0, 15));
   };
 
   // Handle input and results
@@ -37,9 +40,10 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
     searchBreweries(debouncedSearchInput);
   }, [debouncedSearchInput])
 
-  const handleSearchResult = (result: string) => {
-    setSearchInput(result);
-    alert('Execute search action…')
+  const handleSearchResult = (result: Pick<Brewery, 'id' | 'name'>) => {
+    setSearchInput(result.name);
+    dispatch({ type: "ADD", id: result.id, name: result.name });
+    // alert('Execute search action…')
     clearSearchResults();
   };
 
@@ -51,7 +55,7 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
   const handleInputKeyDown = (e: React.KeyboardEvent,) => {
     switch (e.key) {
       case "Enter":
-        alert('Execute search action…')
+        // alert('Execute search action…')
         break;
       case "ArrowDown":
         e.preventDefault();
@@ -60,7 +64,7 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
     }
   };
 
-  const handleResultsKeyDown = (result: string, e: React.KeyboardEvent, i: number) => {
+  const handleResultsKeyDown = (result: Pick<Brewery, 'id' | 'name'>, e: React.KeyboardEvent, i: number) => {
     const prev = searchResultRef.current[i - 1];
     const next = searchResultRef.current[i + 1];
     const setInputFocus = () => {
@@ -129,8 +133,8 @@ const Search: React.FC<Test> = ({ label = "Search" }) => {
                 key={`${result}-${i}`}
                 ref={(e) => { if (e) searchResultRef.current[i] = e }}
                 tabIndex={0}
-                onClick={() => handleSearchResult(result.name)}
-                onKeyDown={(e) => handleResultsKeyDown(result.name, e, i)}
+                onClick={() => handleSearchResult(result)}
+                onKeyDown={(e) => handleResultsKeyDown(result, e, i)}
               >
                 {result.name}
               </li>
